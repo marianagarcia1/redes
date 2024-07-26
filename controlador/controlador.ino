@@ -1,5 +1,11 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <Ticker.h>
+
+Ticker controller, send_data;
+
+
+
 
 // Configurações da rede WiFi
 const char* ssid = "mauricio";
@@ -9,10 +15,31 @@ const char* password = "olnu7936";
 WiFiUDP udp;
 const char* remoteIP = "192.168.102.30";  // IP do ESP32 receptor
 const int remotePort = 1322;            // Porta para enviar mensagens
-const int localPort = 1322;             // Porta local para o transmissor (opcional)
+const int localPort = 1322; 
+            // Porta local para o transmissor (opcional)
+
+int pwm = 0;
+
+void SendDataUDP() {
+  udp.beginPacket(remoteIP, remotePort);
+  udp.write((uint8_t*)&pwm, sizeof(pwm));  // Envia o valor de pwm diretamente como bytes
+  udp.endPacket();
+  Serial.printf("Valor enviado: %d\n", pwm); // Adiciona uma mensagem de depuração
+
+}
+
+void ExecuteControl(){
+  pwm+=1;
+
+  //mandar via udp para o atuador o valor do pwm;
+  SendDataUDP();
+
+}
 
 void setup() {
   Serial.begin(115200);
+  // udp.beginPacket(remoteIP, remotePort);
+
 
   // Conecta à rede WiFi
   WiFi.begin(ssid, password);
@@ -25,18 +52,12 @@ void setup() {
   // Inicia o UDP
   udp.begin(localPort);
   Serial.printf("UDP iniciado na porta %d\n", localPort);
+
+  controller.attach(1, ExecuteControl);
+  send_data.attach(0.001, SendDataUDP);
 }
 
 void loop() {
-  // Mensagem a ser enviada
-  const char *message = "Olá, ESP32 receptor!";
 
-  // Envia a mensagem
-  udp.beginPacket(remoteIP, remotePort);
-  udp.write((uint8_t*)message, strlen(message));
-  udp.endPacket();
 
-  Serial.printf("Mensagem enviada para %s:%d\n", remoteIP, remotePort);
-
-  delay(2000); // Aguarda 2 segundos antes de enviar a próxima mensagem
 }
