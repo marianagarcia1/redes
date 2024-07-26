@@ -8,7 +8,18 @@ char packetBuffer[255];
 unsigned int localPort = 1322;
 const char *ssid = "mauricio";
 const char *password = "olnu7936";
+
+int pwmRecebido = 0;
+int inicioTempo = 0;
+int finalTempo = 0;
 Timer send_message;
+
+void ValidatePWM(int pwm) {
+  if(pwm < 255 && pwm > 0){
+    pwmRecebido = pwm;
+    inicioTempo = millis();
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -27,21 +38,34 @@ void setup() {
 }
 
 void loop(){
+  finalTempo = millis();
+
+  if ((finalTempo - inicioTempo) > 1000){
+    // setar o pwm para 0;
+    Serial.println("Tempo excedido.");
+  }
 
   int packetSize = udp.parsePacket();
-  Serial.print(" Received packet from : "); Serial.println(udp.remoteIP());
-  Serial.print(" Size : "); Serial.println(packetSize);
+  // Serial.print(" Received packet from : "); Serial.println(udp.remoteIP());
+  // Serial.print(" Size : "); Serial.println(packetSize);
   if (packetSize) {
-    int len = udp.read(packetBuffer, 255);
-    if (len > 0) packetBuffer[len - 1] = 0;
-    Serial.printf("Data : %s\n", packetBuffer);
-    udp.beginPacket(udp.remoteIP(), udp.remotePort());
-    udp.printf("UDP packet was received OK\r\n");
-    udp.endPacket();
+    int pwm;
+    udp.read((char*)&pwm, sizeof(pwm));
+    ValidatePWM(pwm);
+    Serial.printf("pwm %d \n", pwmRecebido);  
   }
-  Serial.println("\n");
-  delay(500);
-  Serial.print("[Server Connected] ");
-  Serial.println (WiFi.localIP());
+  else{
+    inicioTempo = millis();
+  }
+
+
+
+  // Serial.println("\n");
+  // delay(500);
+  // Serial.print("[Server Connected] ");
+  // Serial.println (WiFi.localIP());
+
+
+
 
 }
