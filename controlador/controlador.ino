@@ -6,12 +6,13 @@
 Ticker send_data;
 
 // Configurações da rede WiFi
-const char* ssid = "mauricio";
-const char* password = "olnu7936";
+// unsigned int localPort = 1322;
+const char *ssid = "Computador_do_Nied";
+const char *password = "fuscaverde";
 
 // Configurações do UDP
 WiFiUDP udp;
-const char* remoteIP = "192.168.102.30";  // IP do ESP32 receptor
+const char* remoteIP = "192.168.137.250";  // IP do ESP32 receptor
 const int remotePort = 1322;              // Porta para enviar mensagens
 const int localPort = 1322;     
 
@@ -19,7 +20,7 @@ const int localPort = 1322;
 // double kp = 0.19236, ki = 0.008971, kd = 0;
 // double P, I, D;
 // double erro = 0;
-// double temperatura;
+float temperatura = 0;
 // double temperatura_anterior;
 // long ultimo_processo;
 // int diferenca_tempo;
@@ -27,8 +28,8 @@ const int localPort = 1322;
 // float set_point = 30.0;
 // int pwm = 0;
 // float temp = 30.0;
-// unsigned long lastTempReceived = 0;       // Último tempo em que a temperatura foi recebida
-// unsigned long timeoutInterval = 1000;     // Intervalo de timeout em milissegundos
+unsigned long lastTempReceived = 0;       // Último tempo em que a temperatura foi recebida
+unsigned long timeoutInterval = 1000;     // Intervalo de timeout em milissegundos
 // int setpoint = 0;
 
 unsigned long tempoInicioBmais = 0;
@@ -40,7 +41,7 @@ bool estadoBotaoMenos;
 bool estadoBotaoMaisAnt;
 bool estadoBotaoMenosAnt;
 
-double temperatura = 25.0;
+// double temperatura = 25.0;
 double temperatura_anterior;
 long ultimo_processo;
 int diferenca_tempo;
@@ -61,37 +62,10 @@ double
   //kd = 0;
 void SendDataUDP() {
   udp.beginPacket(remoteIP, remotePort);
-  udp.write((uint8_t*)&pwm_porcent, sizeof(pwm_porcent));  // Envia o valor de pwm diretamente como bytes
+  udp.write((uint8_t*)&pwm, sizeof(pwm));  // Envia o valor de pwm diretamente como bytes
   udp.endPacket();
-  Serial.printf("PWM enviado: %d\n", pwm_porcent); // Adiciona uma mensagem de depuração
+  Serial.printf("PWM enviado: %d\n", pwm); // Adiciona uma mensagem de depuração
 }
-
-// void ExecuteControl() {
-//   diferenca_tempo = (millis() - ultimo_processo) / 1000.0;
-//   ultimo_processo = millis();
-
-//   erro = set_point - temp;
-
-//   P = erro * kp;
-//   I += erro * ki * diferenca_tempo;
-//   D = (temperatura_anterior - temp) * kd * diferenca_tempo;
-
-//   temperatura_anterior = temp;
-
-//   PID = P + I + D;
-//   Serial.printf("PID: %.2f\n", PID);
-
-//   pwm = map(PID, 10, 90, 0, 255);
-//   if (pwm >= 255) {
-//     pwm = 255;
-//   }
-//   if (pwm <= 0) {
-//     pwm = 0;
-//   }
-
-//   // Mandar via UDP para o atuador o valor do pwm
-//   SendDataUDP();
-// }
 
 void setup() {
   Serial.begin(115200);
@@ -113,23 +87,23 @@ void setup() {
 }
 
 void loop() {
-  // unsigned long currentMillis = millis();
+  unsigned long currentMillis = millis();
   set_point = (float(analogRead(SETPOINT_PIN)) * 3.3 / (4095.0));
   set_point = map(set_point * 10, 0, 33, 15, 80);
   // int analog = analogRead(SETPOINT_PIN);
 
   // Serial.printf("Set_point: %d %.2f %d PWM: %d\n", set_point, set_point, analog, pwm);
 
-  // // Verificar se o timeout foi excedido
-  // if ((currentMillis - lastTempReceived) > timeoutInterval) {
-  //   Serial.println("Tempo Excedido!");
-  //   pwm = 0;
-  // }
+  // Verificar se o timeout foi excedido
+  if ((currentMillis - lastTempReceived) > 5000 ) {
+    Serial.println("Tempo Excedido!");
+    pwm = 0;
+  }
 
   int packetSize = udp.parsePacket();
   if (packetSize) {
     udp.read((char*)&temperatura, sizeof(temperatura));
-  //   lastTempReceived = millis(); // Atualizar o tempo da última recepção de temperatura
+    lastTempReceived = millis(); // Atualizar o tempo da última recepção de temperatura
     Serial.printf("Temperatura recebida: %.2f\n", temperatura);
   }
 
@@ -163,10 +137,10 @@ void loop() {
     pwm = 0;
   }
 
-  pwm_porcent = map(pwm, 0, 255, 0, 100);
+  // pwm_porcent = map(pwm, 0, 255, 0, 100);
 
-  Serial.print("  PWM: ");
-  Serial.println(pwm_porcent);
-  Serial.println(PID);
-  Serial.println(" % ");
+  // Serial.print("  PWM: ");
+  // Serial.println(pwm_porcent);
+  // Serial.println(PID);
+  // Serial.println(" % ");
 }
