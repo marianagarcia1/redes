@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Temperatura</title>
+    <title>Controle de Temperatura e Setpoint</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,6 +20,10 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+        }
+        .data-display {
+            font-size: 24px;
+            margin-bottom: 20px;
         }
         .temperature-display {
             font-size: 48px;
@@ -43,8 +47,9 @@
 <body>
 
 <div class="container">
-    <h1>Controle de Temperatura</h1>
-    <div class="temperature-display" id="currentTemp">Temperatura Atual: --°C</div>
+    <h1>Controle de Temperatura e Setpoint</h1>
+    <div class="data-display" id="setpointDisplay">Setpoint: --°C</div>
+    <div class="temperature-display" id="temperatureDisplay">Temperatura: --°C</div>
     <div class="setpoint-control">
         <input type="range" id="setpointSlider" min="15" max="80" value="50">
         <div class="setpoint-display" id="setpointValue">Setpoint: 50°C</div>
@@ -52,22 +57,26 @@
 </div>
 
 <script>
+    // Conectar ao servidor WebSocket
     const socket = new WebSocket('ws://localhost:8080');
 
     socket.onmessage = function(event) {
-        const data = event.data;
-        document.getElementById('currentTemp').innerText = `Temperatura Atual: ${data}`;
+        const data = JSON.parse(event.data);
+        document.getElementById('setpointDisplay').innerText = `Setpoint: ${data.setpoint}°C`;
+        document.getElementById('temperatureDisplay').innerText = `Temperatura: ${data.temperature}°C`;
     };
 
+    // Atualizar setpoint e enviar para o servidor WebSocket
     const setpointSlider = document.getElementById('setpointSlider');
     const setpointValue = document.getElementById('setpointValue');
 
     setpointSlider.addEventListener('input', function() {
-        setpointValue.innerText = `Setpoint: ${this.value}°C`;
-        // Aqui você pode enviar o setpoint via WebSocket ou outro método para o ESP32
+        const setpoint = this.value;
+        setpointValue.innerText = `Setpoint: ${setpoint}°C`;
+        // Enviar o novo setpoint para o servidor WebSocket (se necessário)
+        // socket.send(JSON.stringify({ setpoint: setpoint }));
     });
 </script>
 
 </body>
 </html>
-
