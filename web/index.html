@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Temperatura</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .temperature-display {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .setpoint-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .setpoint-control input[type="range"] {
+            width: 300px;
+        }
+        .setpoint-display {
+            font-size: 24px;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Controle de Temperatura</h1>
+    <div class="temperature-display" id="currentTemp">Temperatura Atual: --°C</div>
+    <div class="setpoint-control">
+        <input type="range" id="setpointSlider" min="15" max="80" value="50">
+        <div class="setpoint-display" id="setpointValue">Setpoint: 50°C</div>
+    </div>
+</div>
+
+<script>
+    const socket = new WebSocket('ws://localhost:8080');
+
+    socket.onmessage = function(event) {
+        const data = event.data;
+        document.getElementById('currentTemp').innerText = `Temperatura Atual: ${data}`;
+    };
+
+    const setpointSlider = document.getElementById('setpointSlider');
+    const setpointValue = document.getElementById('setpointValue');
+
+    setpointSlider.addEventListener('input', function() {
+        setpointValue.innerText = `Setpoint: ${this.value}°C`;
+        // Aqui você pode enviar o setpoint via WebSocket ou outro método para o ESP32
+    });
+</script>
+
+</body>
+</html>
+
