@@ -60,10 +60,17 @@
     // Conectar ao servidor WebSocket
     const socket = new WebSocket('ws://localhost:8080');
 
-    socket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
+    // Função para atualizar o display com os dados recebidos
+    function updateDisplay(data) {
         document.getElementById('setpointDisplay').innerText = `Setpoint: ${data.setpoint}°C`;
         document.getElementById('temperatureDisplay').innerText = `Temperatura: ${data.temperature}°C`;
+        document.getElementById('setpointSlider').value = data.setpoint;
+        document.getElementById('setpointValue').innerText = `Setpoint: ${data.setpoint}°C`;
+    }
+
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        updateDisplay(data);
     };
 
     // Atualizar setpoint e enviar para o servidor WebSocket
@@ -73,9 +80,25 @@
     setpointSlider.addEventListener('input', function() {
         const setpoint = this.value;
         setpointValue.innerText = `Setpoint: ${setpoint}°C`;
-        // Enviar o novo setpoint para o servidor WebSocket (se necessário)
-        // socket.send(JSON.stringify({ setpoint: setpoint }));
+        console.log(`Setpoint atual: ${setpoint}`);
+        // Enviar o novo setpoint para o servidor WebSocket
+        if (socket.readyState === WebSocket.OPEN) {
+            console.log(`Enviando setpoint: ${setpoint}`);
+            socket.send(JSON.stringify({ setpoint: setpoint }));
+        }
     });
+
+    socket.onopen = function() {
+        console.log('Conectado ao servidor WebSocket');
+    };
+
+    socket.onerror = function(error) {
+        console.error('Erro no WebSocket:', error);
+    };
+
+    socket.onclose = function() {
+        console.log('Conexão WebSocket fechada');
+    };
 </script>
 
 </body>
